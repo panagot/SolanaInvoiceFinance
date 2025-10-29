@@ -1,0 +1,26 @@
+/* Custom teal style for Solana WalletMultiButton */
+.wallet-adapter-button-trigger {
+  background: #319795 !important; /* Chakra teal.500 */
+  color: white !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-size: 1.05rem !important;
+  padding: 0.7rem 2rem !important;
+  box-shadow: 0 2px 8px rgba(49,151,149,0.10), 0 1.5px 4px rgba(0,0,0,0.06);
+  border: none !important;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  outline: none !important;
+  margin-left: 1rem;
+  letter-spacing: 0.02em;
+}
+.wallet-adapter-button-trigger:hover,
+.wallet-adapter-button-trigger:focus {
+  background: #2c7a7b !important; /* Chakra teal.600 */
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(49,151,149,0.18), 0 2px 8px rgba(0,0,0,0.10);
+  transform: translateY(-2px) scale(1.03);
+}
+.wallet-adapter-button-start-icon,
+.wallet-adapter-button-end-icon {
+  margin-right: 0.5rem !important;
+} 

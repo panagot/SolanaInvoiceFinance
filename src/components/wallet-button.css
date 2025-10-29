@@ -1,0 +1,17 @@
+/* Custom teal style for Solana WalletMultiButton */
+.wallet-adapter-button-trigger {
+  background: #319795 !important; /* Chakra teal.500 */
+  color: white !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  padding: 0.5rem 1.25rem !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  border: none !important;
+  transition: background 0.2s;
+}
+.wallet-adapter-button-trigger:hover,
+.wallet-adapter-button-trigger:focus {
+  background: #2c7a7b !important; /* Chakra teal.600 */
+  color: white !important;
+} 
