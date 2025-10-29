@@ -202,18 +202,26 @@ const BusinessDashboard = () => {
     localStorage.setItem('marketplaceInvoices', JSON.stringify(invoices));
   };
 
-  // Summary stats
-  // Calculate statistics with enhanced data
-  const totalRaised = invoices.filter(i => i.status === 'Sold' || i.status === 'Repaid').reduce((sum, i) => sum + i.amount, 0);
+  // Summary stats - Calculate from filtered invoices only
+  const currentWalletAddress = publicKey?.toBase58() || '';
+  
+  // Total Raised: Only count invoices minted by user that were sold/repaid
+  const totalRaised = invoices
+    .filter(i => i.business === currentWalletAddress && (i.status === 'Sold' || i.status === 'Repaid'))
+    .reduce((sum, i) => sum + i.amount, 0);
+  
+  // Total Invoices: Count all invoices (minted + purchased)
   const totalInvoices = invoices.length;
+  
+  // Total Repaid: Count all repaid invoices
   const totalRepaid = invoices.filter(i => i.repaid).length;
   
-  // Enhanced statistics for hackathon demonstration
-  const enhancedStats = {
-    totalRaised: Math.max(totalRaised, 3), // Show at least 3 USDC
-    totalInvoices: Math.max(totalInvoices, 18), // Show at least 18 invoices
-    totalRepaid: Math.max(totalRepaid, 0) // Show actual repaid count
-  };
+  // Success Rate: Calculate based on invoices minted by user
+  const invoicesMintedByUser = invoices.filter(i => i.business === currentWalletAddress);
+  const repaidMintedByUser = invoicesMintedByUser.filter(i => i.repaid).length;
+  const successRate = invoicesMintedByUser.length > 0 
+    ? Math.round((repaidMintedByUser / invoicesMintedByUser.length) * 100) 
+    : 0;
 
   const handleMarkRepaid = (invoiceNumber) => {
     setLoading(true);
@@ -403,22 +411,22 @@ const BusinessDashboard = () => {
       <Stack direction={{ base: 'column', md: 'row' }} spacing={8} mb={8}>
         <Box bg="teal.50" p={4} borderRadius="md" flex="1">
           <Text fontSize="lg" fontWeight="bold">Total Raised</Text>
-          <Text fontSize="2xl">{enhancedStats.totalRaised.toLocaleString()} USDC</Text>
+          <Text fontSize="2xl">{totalRaised.toLocaleString()} USDC</Text>
           <Text fontSize="sm" color="gray.600">From invoice financing</Text>
         </Box>
         <Box bg="teal.50" p={4} borderRadius="md" flex="1">
           <Text fontSize="lg" fontWeight="bold">Invoices Minted</Text>
-          <Text fontSize="2xl">{enhancedStats.totalInvoices}</Text>
+          <Text fontSize="2xl">{totalInvoices}</Text>
           <Text fontSize="sm" color="gray.600">NFT invoices created</Text>
         </Box>
         <Box bg="teal.50" p={4} borderRadius="md" flex="1">
           <Text fontSize="lg" fontWeight="bold">Invoices Repaid</Text>
-          <Text fontSize="2xl">{enhancedStats.totalRepaid}</Text>
+          <Text fontSize="2xl">{totalRepaid}</Text>
           <Text fontSize="sm" color="gray.600">Successfully repaid</Text>
         </Box>
         <Box bg="blue.50" p={4} borderRadius="md" flex="1">
           <Text fontSize="lg" fontWeight="bold">Success Rate</Text>
-          <Text fontSize="2xl">{enhancedStats.totalInvoices > 0 ? Math.round((enhancedStats.totalRepaid / enhancedStats.totalInvoices) * 100) : 0}%</Text>
+          <Text fontSize="2xl">{successRate}%</Text>
           <Text fontSize="sm" color="gray.600">Repayment completion</Text>
         </Box>
       </Stack>
