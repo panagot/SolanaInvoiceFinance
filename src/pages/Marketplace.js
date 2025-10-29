@@ -86,13 +86,25 @@ function setMarketplaceInvoices(invoices) {
   localStorage.setItem('marketplaceInvoices', JSON.stringify(invoices));
 }
 
-const getYield = (amount, premium) => {
+const getYield = (amount, premium, currency = 'USDC') => {
   const amt = Number(amount.toString().replace(/[^\d.]/g, ''));
   const prem = Number(premium.toString().replace(/[^\d.]/g, ''));
-  if (isNaN(amt) || isNaN(prem)) return { usdc: '—', percent: '—' };
+  if (isNaN(amt) || isNaN(prem)) return { amount: '—', percent: '—', currency: currency };
+  
+  // Extract currency from amount string if not provided
+  let actualCurrency = currency;
+  if (typeof amount === 'string' && amount.includes(' ')) {
+    const parts = amount.split(' ');
+    const lastPart = parts[parts.length - 1].toUpperCase();
+    if (['SOL', 'USDC', 'USD', 'EURO'].includes(lastPart)) {
+      actualCurrency = lastPart;
+    }
+  }
+  
   return {
-    usdc: ((amt * prem) / 100).toLocaleString(),
+    amount: ((amt * prem) / 100).toLocaleString(),
     percent: prem + '%',
+    currency: actualCurrency,
   };
 };
 
@@ -440,7 +452,7 @@ const Marketplace = () => {
               {/* My Purchases Tab */}
               <SimpleGrid columns={[1, 1, 2]} spacing={6}>
                 {purchased.filter(inv => publicKey && isValidInvoice(inv)).map((invoice, index) => {
-                  const yieldInfo = getYield(invoice.amount, invoice.repaymentPremium);
+                  const yieldInfo = getYield(invoice.amount, invoice.repaymentPremium, invoice.currency);
                   return (
                     <Box key={`purchased-${invoice.id}-${index}-${invoice.invoiceNumber}`} p={5} borderWidth="1px" borderRadius="lg" boxShadow="sm" bg="white" borderColor="gray.200" cursor="pointer" onClick={() => handleOpen(invoice)} _hover={{ boxShadow: 'md', bg: 'gray.50', borderColor: 'gray.300' }} aria-label={`View details for my purchased invoice ${invoice.invoiceNumber}`}>
                       <Stack spacing={2}>
@@ -460,7 +472,7 @@ const Marketplace = () => {
                           <Badge colorScheme="blue" w="fit-content">Sold</Badge>
                         </Tooltip>
                         <Text fontSize="sm" color="gray.600">{invoice.description}</Text>
-                        <Text fontSize="sm" color="teal.700"><b>Expected Yield:</b> {yieldInfo.usdc} USDC ({yieldInfo.percent})</Text>
+                        <Text fontSize="sm" color="teal.700"><b>Expected Yield:</b> {yieldInfo.amount} {yieldInfo.currency} ({yieldInfo.percent})</Text>
                       </Stack>
                     </Box>
                   );
@@ -508,7 +520,10 @@ const Marketplace = () => {
                     <Text><b>Repayment Premium:</b> {isValidInvoice(selectedInvoice) ? (<Badge colorScheme="teal" fontSize="1em">{selectedInvoice.repaymentPremium}</Badge>) : 'N/A'}</Text>
                     {isValidInvoice(selectedInvoice) && (
                       <Text color="teal.700" fontWeight="bold">
-                        Expected Yield: {getYield(selectedInvoice.amount, selectedInvoice.repaymentPremium).usdc} USDC ({getYield(selectedInvoice.amount, selectedInvoice.repaymentPremium).percent})
+                        Expected Yield: {(() => {
+                          const yieldInfo = getYield(selectedInvoice.amount, selectedInvoice.repaymentPremium, selectedInvoice.currency);
+                          return `${yieldInfo.amount} ${yieldInfo.currency} (${yieldInfo.percent})`;
+                        })()}
                       </Text>
                     )}
                     <Text><b>Line Items:</b> {isValidInvoice(selectedInvoice) && selectedInvoice.lineItems && selectedInvoice.lineItems.length > 0 ? selectedInvoice.lineItems.join(', ') : '—'}</Text>
