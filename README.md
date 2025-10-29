@@ -90,18 +90,6 @@ A decentralized invoice financing platform built on Solana, enabling businesses 
 
 ---
 
-## 🔜 What Remains / Future Work
-- **Blockchain integration:** Write/read invoice NFTs and transactions on Solana
-- **Backend/API:** For invoice verification, KYC, and off-chain data
-- **Real payments:** Integrate with stablecoins or payment rails
-- **Advanced notifications:** Email, push, or on-chain reminders
-- **Investor analytics:** IRR, risk scoring, portfolio management
-- **Multi-user support:** Real authentication and user management
-- **Audit & security:** Smart contract and frontend audits
-- **Production deployment:** Hosting, CI/CD, environment configs
-
----
-
 ## 🙏 Credits & Acknowledgments
 - Built with [Solana](https://solana.com/), [Chakra UI](https://chakra-ui.com/), [React](https://react.dev/), and [Solana Wallet Adapter](https://github.com/solana-labs/wallet-adapter).
 - UI/UX inspired by leading DeFi and fintech platforms.
