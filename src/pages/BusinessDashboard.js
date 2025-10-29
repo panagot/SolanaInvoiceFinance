@@ -101,9 +101,27 @@ const BusinessDashboard = () => {
       }
 
       const marketplaceData = localStorage.getItem('marketplaceInvoices');
-      const marketplaceInvoices = marketplaceData ? JSON.parse(marketplaceData) : [];
+      let marketplaceInvoices = marketplaceData ? JSON.parse(marketplaceData) : [];
       
+      // Migration: Convert business names to wallet addresses for existing test data
       const currentWalletAddress = publicKey.toBase58();
+      marketplaceInvoices = marketplaceInvoices.map(invoice => {
+        // If business field contains a business name instead of wallet address, convert it
+        if (invoice.business && !invoice.business.startsWith('5') && invoice.business !== currentWalletAddress) {
+          // This is likely a business name, convert to wallet address
+          return {
+            ...invoice,
+            business: currentWalletAddress,
+            businessName: invoice.business // Preserve the business name
+          };
+        }
+        return invoice;
+      });
+      
+      // Save migrated data back to localStorage
+      localStorage.setItem('marketplaceInvoices', JSON.stringify(marketplaceInvoices));
+      
+      console.log('Raw marketplace invoices:', marketplaceInvoices);
       
       // Filter invoices: only show invoices minted by user OR purchased by user
       const userInvoices = marketplaceInvoices.filter(invoice => {
@@ -112,11 +130,15 @@ const BusinessDashboard = () => {
         return isMintedByUser || isPurchasedByUser;
       });
       
+      console.log('Filtered user invoices:', userInvoices);
+      
       // Convert marketplace invoices to dashboard format
       const convertedInvoices = userInvoices.map((invoice, index) => {
         // Extract currency: check invoice.currency first, then try to extract from amount string
         let currency = invoice.currency;
         let amount = invoice.amount;
+        
+        console.log(`Processing invoice ${index}:`, { originalAmount: invoice.amount, originalCurrency: invoice.currency });
         
         // If currency is not set, try to extract from amount string
         if (!currency && typeof invoice.amount === 'string') {
@@ -131,6 +153,8 @@ const BusinessDashboard = () => {
           }
         }
         currency = currency || 'USDC';
+        
+        console.log(`Extracted: amount=${amount}, currency=${currency}`);
         
         return {
           id: invoice.id || `invoice-${index}-${Date.now()}`,
@@ -228,11 +252,20 @@ const BusinessDashboard = () => {
   // Total Raised: Only count invoices minted by user that were sold/repaid
   const soldOrRepaidInvoices = invoices.filter(i => i.business === currentWalletAddress && (i.status === 'Sold' || i.status === 'Repaid'));
   
-  // Calculate totals separately for USDC and SOL
+  // Calculate totals for each currency
+  console.log('Sold or repaid invoices for totals:', soldOrRepaidInvoices);
+  
   const totalRaisedUSDC = soldOrRepaidInvoices
     .filter(i => {
       const currency = (i.currency || '').toUpperCase();
-      return currency === 'USDC' || currency === 'USD' || currency === '';
+      return currency === 'USDC';
+    })
+    .reduce((sum, i) => sum + i.amount, 0);
+  
+  const totalRaisedUSD = soldOrRepaidInvoices
+    .filter(i => {
+      const currency = (i.currency || '').toUpperCase();
+      return currency === 'USD';
     })
     .reduce((sum, i) => sum + i.amount, 0);
   
@@ -242,6 +275,15 @@ const BusinessDashboard = () => {
       return currency === 'SOL';
     })
     .reduce((sum, i) => sum + i.amount, 0);
+  
+  const totalRaisedEURO = soldOrRepaidInvoices
+    .filter(i => {
+      const currency = (i.currency || '').toUpperCase();
+      return currency === 'EURO';
+    })
+    .reduce((sum, i) => sum + i.amount, 0);
+    
+  console.log('Currency totals:', { USDC: totalRaisedUSDC, USD: totalRaisedUSD, SOL: totalRaisedSOL, EURO: totalRaisedEURO });
   
   // Total Invoices: Count all invoices (minted + purchased)
   const totalInvoices = invoices.length;
@@ -448,10 +490,16 @@ const BusinessDashboard = () => {
             {totalRaisedUSDC > 0 && (
               <Text fontSize="2xl" fontWeight="bold">{totalRaisedUSDC.toLocaleString()} USDC</Text>
             )}
+            {totalRaisedUSD > 0 && (
+              <Text fontSize="2xl" fontWeight="bold">{totalRaisedUSD.toLocaleString()} USD</Text>
+            )}
             {totalRaisedSOL > 0 && (
               <Text fontSize="2xl" fontWeight="bold">{totalRaisedSOL.toLocaleString()} SOL</Text>
             )}
-            {totalRaisedUSDC === 0 && totalRaisedSOL === 0 && (
+            {totalRaisedEURO > 0 && (
+              <Text fontSize="2xl" fontWeight="bold">{totalRaisedEURO.toLocaleString()} EURO</Text>
+            )}
+            {totalRaisedUSDC === 0 && totalRaisedUSD === 0 && totalRaisedSOL === 0 && totalRaisedEURO === 0 && (
               <Text fontSize="2xl" fontWeight="bold">0 USDC</Text>
             )}
           </VStack>

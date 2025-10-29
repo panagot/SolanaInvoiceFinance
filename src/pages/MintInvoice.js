@@ -522,7 +522,8 @@ const MintInvoice = () => {
           const newInvoice = {
             id: Date.now().toString(),
             invoiceNumber: form.invoiceNumber,
-            business: form.businessName,
+            business: publicKey?.toBase58() || 'Unknown', // Store wallet address instead of business name
+            businessName: form.businessName, // Keep business name for display
             amount: `${Number(form.amount).toLocaleString()} ${form.currency}`,
             dueDate: form.dueDate,
             repaymentPremium: `${form.repaymentPremium}%`,
