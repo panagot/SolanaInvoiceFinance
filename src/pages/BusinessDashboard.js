@@ -481,11 +481,14 @@ const BusinessDashboard = () => {
                       <Td>{inv.buyer ? inv.buyer : <Text color="gray.400">—</Text>}</Td>
                       <Td>
                         <Flex justify="flex-end" gap={2}>
-                          {inv.status === 'Sold' && !inv.repaid && (
+                          {inv.status === 'Sold' && !inv.repaid && inv.business === publicKey?.toBase58() && (
                             <>
                               <Button colorScheme="teal" size="sm" onClick={e => { e.stopPropagation(); handleRepayInvoice(inv); }} isLoading={loading} loadingText="Repaying...">Repay Invoice</Button>
                               <Button colorScheme="blue" size="sm" onClick={e => { e.stopPropagation(); handleListForSale(inv.id); }}>List for Sale</Button>
                             </>
+                          )}
+                          {inv.status === 'Sold' && !inv.repaid && inv.business !== publicKey?.toBase58() && (
+                            <Text fontSize="sm" color="gray.500">Owned by different business</Text>
                           )}
                           {inv.status === 'Listed' && (
                             <Button colorScheme="gray" size="sm" isDisabled>Edit</Button>
