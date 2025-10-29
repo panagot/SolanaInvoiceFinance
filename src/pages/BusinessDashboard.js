@@ -116,11 +116,17 @@ const BusinessDashboard = () => {
       const convertedInvoices = userInvoices.map((invoice, index) => {
         // Extract currency: check invoice.currency first, then try to extract from amount string
         let currency = invoice.currency;
+        let amount = invoice.amount;
+        
+        // If currency is not set, try to extract from amount string
         if (!currency && typeof invoice.amount === 'string') {
           const amountParts = invoice.amount.split(' ');
-          currency = amountParts[amountParts.length - 1].toUpperCase(); // Get last part and uppercase
+          if (amountParts.length > 1) {
+            currency = amountParts[amountParts.length - 1].toUpperCase(); // Get last part and uppercase
+            amount = amountParts.slice(0, -1).join(' '); // Remove currency from amount
+          }
           // If last part is not a valid currency, default to USDC
-          if (!['SOL', 'USDC', 'USD'].includes(currency)) {
+          if (!['SOL', 'USDC', 'USD', 'USDT', 'EURO'].includes(currency)) {
             currency = 'USDC';
           }
         }
@@ -129,7 +135,7 @@ const BusinessDashboard = () => {
         return {
           id: invoice.id || `invoice-${index}-${Date.now()}`,
           invoiceNumber: invoice.invoiceNumber,
-          amount: parseFloat(invoice.amount.replace(/[^\d.]/g, '')),
+          amount: parseFloat(amount.replace(/[^\d.]/g, '')),
           currency: currency,
           dueDate: invoice.dueDate,
           repaymentPremium: parseFloat(invoice.repaymentPremium.replace('%', '')),
