@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Heading, Text, Stack, Table, Thead, Tbody, Tr, Th, Td, Badge, Button, Flex, Spacer, Alert, AlertIcon, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter, IconButton, Tooltip, Checkbox, useDisclosure, Avatar, Menu, MenuButton, MenuList, MenuItem, Progress, Skeleton, SkeletonText, useColorModeValue, motion } from '@chakra-ui/react';
+import { Box, Heading, Text, Stack, VStack, Table, Thead, Tbody, Tr, Th, Td, Badge, Button, Flex, Spacer, Alert, AlertIcon, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter, IconButton, Tooltip, Checkbox, useDisclosure, Avatar, Menu, MenuButton, MenuList, MenuItem, Progress, Skeleton, SkeletonText, useColorModeValue, motion } from '@chakra-ui/react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { repayInvoice } from '../utils/paymentUtils';
 import { BellIcon, SettingsIcon, InfoOutlineIcon } from '@chakra-ui/icons';
@@ -206,8 +206,15 @@ const BusinessDashboard = () => {
   const currentWalletAddress = publicKey?.toBase58() || '';
   
   // Total Raised: Only count invoices minted by user that were sold/repaid
-  const totalRaised = invoices
-    .filter(i => i.business === currentWalletAddress && (i.status === 'Sold' || i.status === 'Repaid'))
+  const soldOrRepaidInvoices = invoices.filter(i => i.business === currentWalletAddress && (i.status === 'Sold' || i.status === 'Repaid'));
+  
+  // Calculate totals separately for USDC and SOL
+  const totalRaisedUSDC = soldOrRepaidInvoices
+    .filter(i => i.currency === 'USDC' || !i.currency || i.currency === 'USD')
+    .reduce((sum, i) => sum + i.amount, 0);
+  
+  const totalRaisedSOL = soldOrRepaidInvoices
+    .filter(i => i.currency === 'SOL')
     .reduce((sum, i) => sum + i.amount, 0);
   
   // Total Invoices: Count all invoices (minted + purchased)
@@ -411,8 +418,18 @@ const BusinessDashboard = () => {
       <Stack direction={{ base: 'column', md: 'row' }} spacing={8} mb={8}>
         <Box bg="teal.50" p={4} borderRadius="md" flex="1">
           <Text fontSize="lg" fontWeight="bold">Total Raised</Text>
-          <Text fontSize="2xl">{totalRaised.toLocaleString()} USDC</Text>
-          <Text fontSize="sm" color="gray.600">From invoice financing</Text>
+          <VStack spacing={1} align="flex-start">
+            {totalRaisedUSDC > 0 && (
+              <Text fontSize="2xl" fontWeight="bold">{totalRaisedUSDC.toLocaleString()} USDC</Text>
+            )}
+            {totalRaisedSOL > 0 && (
+              <Text fontSize="2xl" fontWeight="bold">{totalRaisedSOL.toLocaleString()} SOL</Text>
+            )}
+            {totalRaisedUSDC === 0 && totalRaisedSOL === 0 && (
+              <Text fontSize="2xl" fontWeight="bold">0 USDC</Text>
+            )}
+          </VStack>
+          <Text fontSize="sm" color="gray.600" mt={2}>From invoice financing</Text>
         </Box>
         <Box bg="teal.50" p={4} borderRadius="md" flex="1">
           <Text fontSize="lg" fontWeight="bold">Invoices Minted</Text>
