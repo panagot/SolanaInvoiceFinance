@@ -122,7 +122,7 @@ const BusinessDashboard = () => {
         repaymentPremium: parseFloat(invoice.repaymentPremium.replace('%', '')),
         status: invoice.status || 'Listed',
         buyer: invoice.buyer || null,
-        repaid: false,
+        repaid: invoice.repaid ?? (invoice.status === 'Repaid'), // Preserve repaid status from localStorage
         nftMintAddress: invoice.nftMintAddress,
         nftSignature: invoice.nftSignature,
         nftMetadataUri: invoice.nftMetadataUri,
@@ -213,12 +213,12 @@ const BusinessDashboard = () => {
   // Total Invoices: Count all invoices (minted + purchased)
   const totalInvoices = invoices.length;
   
-  // Total Repaid: Count all repaid invoices
-  const totalRepaid = invoices.filter(i => i.repaid).length;
+  // Total Repaid: Count all repaid invoices (check both repaid flag and status)
+  const totalRepaid = invoices.filter(i => i.repaid || i.status === 'Repaid').length;
   
   // Success Rate: Calculate based on invoices minted by user
   const invoicesMintedByUser = invoices.filter(i => i.business === currentWalletAddress);
-  const repaidMintedByUser = invoicesMintedByUser.filter(i => i.repaid).length;
+  const repaidMintedByUser = invoicesMintedByUser.filter(i => i.repaid || i.status === 'Repaid').length;
   const successRate = invoicesMintedByUser.length > 0 
     ? Math.round((repaidMintedByUser / invoicesMintedByUser.length) * 100) 
     : 0;
