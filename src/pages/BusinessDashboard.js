@@ -82,19 +82,38 @@ const BusinessDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Load invoices from marketplace on component mount
+  // Load invoices from marketplace on component mount and when wallet changes
   useEffect(() => {
-    loadInvoices();
-    loadNotifications();
-  }, []);
+    if (publicKey) {
+      loadInvoices();
+      loadNotifications();
+    } else {
+      // Clear invoices if wallet is disconnected
+      setInvoices([]);
+    }
+  }, [publicKey]);
 
   const loadInvoices = () => {
     try {
+      if (!publicKey) {
+        setInvoices([]);
+        return;
+      }
+
       const marketplaceData = localStorage.getItem('marketplaceInvoices');
       const marketplaceInvoices = marketplaceData ? JSON.parse(marketplaceData) : [];
       
+      const currentWalletAddress = publicKey.toBase58();
+      
+      // Filter invoices: only show invoices minted by user OR purchased by user
+      const userInvoices = marketplaceInvoices.filter(invoice => {
+        const isMintedByUser = invoice.business === currentWalletAddress;
+        const isPurchasedByUser = invoice.buyer === currentWalletAddress;
+        return isMintedByUser || isPurchasedByUser;
+      });
+      
       // Convert marketplace invoices to dashboard format
-      const convertedInvoices = marketplaceInvoices.map((invoice, index) => ({
+      const convertedInvoices = userInvoices.map((invoice, index) => ({
         id: invoice.id || `invoice-${index}-${Date.now()}`,
         invoiceNumber: invoice.invoiceNumber,
         amount: parseFloat(invoice.amount.replace(/[^\d.]/g, '')),
