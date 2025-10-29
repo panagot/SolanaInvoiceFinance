@@ -113,25 +113,39 @@ const BusinessDashboard = () => {
       });
       
       // Convert marketplace invoices to dashboard format
-      const convertedInvoices = userInvoices.map((invoice, index) => ({
-        id: invoice.id || `invoice-${index}-${Date.now()}`,
-        invoiceNumber: invoice.invoiceNumber,
-        amount: parseFloat(invoice.amount.replace(/[^\d.]/g, '')),
-        currency: invoice.amount.split(' ')[1] || 'USDC',
-        dueDate: invoice.dueDate,
-        repaymentPremium: parseFloat(invoice.repaymentPremium.replace('%', '')),
-        status: invoice.status || 'Listed',
-        buyer: invoice.buyer || null,
-        repaid: invoice.repaid ?? (invoice.status === 'Repaid'), // Preserve repaid status from localStorage
-        nftMintAddress: invoice.nftMintAddress,
-        nftSignature: invoice.nftSignature,
-        nftMetadataUri: invoice.nftMetadataUri,
-        business: invoice.business,
-        description: invoice.description,
-        paymentTerms: invoice.paymentTerms,
-        creditScore: invoice.creditScore,
-        lineItems: invoice.lineItems
-      }));
+      const convertedInvoices = userInvoices.map((invoice, index) => {
+        // Extract currency: check invoice.currency first, then try to extract from amount string
+        let currency = invoice.currency;
+        if (!currency && typeof invoice.amount === 'string') {
+          const amountParts = invoice.amount.split(' ');
+          currency = amountParts[amountParts.length - 1].toUpperCase(); // Get last part and uppercase
+          // If last part is not a valid currency, default to USDC
+          if (!['SOL', 'USDC', 'USD'].includes(currency)) {
+            currency = 'USDC';
+          }
+        }
+        currency = currency || 'USDC';
+        
+        return {
+          id: invoice.id || `invoice-${index}-${Date.now()}`,
+          invoiceNumber: invoice.invoiceNumber,
+          amount: parseFloat(invoice.amount.replace(/[^\d.]/g, '')),
+          currency: currency,
+          dueDate: invoice.dueDate,
+          repaymentPremium: parseFloat(invoice.repaymentPremium.replace('%', '')),
+          status: invoice.status || 'Listed',
+          buyer: invoice.buyer || null,
+          repaid: invoice.repaid ?? (invoice.status === 'Repaid'), // Preserve repaid status from localStorage
+          nftMintAddress: invoice.nftMintAddress,
+          nftSignature: invoice.nftSignature,
+          nftMetadataUri: invoice.nftMetadataUri,
+          business: invoice.business,
+          description: invoice.description,
+          paymentTerms: invoice.paymentTerms,
+          creditScore: invoice.creditScore,
+          lineItems: invoice.lineItems
+        };
+      });
       
       setInvoices(convertedInvoices);
     } catch (error) {
@@ -210,11 +224,17 @@ const BusinessDashboard = () => {
   
   // Calculate totals separately for USDC and SOL
   const totalRaisedUSDC = soldOrRepaidInvoices
-    .filter(i => i.currency === 'USDC' || !i.currency || i.currency === 'USD')
+    .filter(i => {
+      const currency = (i.currency || '').toUpperCase();
+      return currency === 'USDC' || currency === 'USD' || currency === '';
+    })
     .reduce((sum, i) => sum + i.amount, 0);
   
   const totalRaisedSOL = soldOrRepaidInvoices
-    .filter(i => i.currency === 'SOL')
+    .filter(i => {
+      const currency = (i.currency || '').toUpperCase();
+      return currency === 'SOL';
+    })
     .reduce((sum, i) => sum + i.amount, 0);
   
   // Total Invoices: Count all invoices (minted + purchased)
